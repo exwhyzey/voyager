@@ -5,6 +5,40 @@ function usage()
 	echo "Usage : $0 [-c <number>][-w <number>][-e <valid email>]"
 }
 
+function compute()
+{
+ if [[ $critical -gt $warning ]]
+ then
+	TOTAL_MEMORY=$( free | grep Mem: | awk '{ print $2 }' ) 
+	USED_MEMORY=$( free | grep Mem: | awk '{ print $3 }' )
+	#echo $TOTAL_MEMORY " " $USED_MEMORY
+	usage=$(awk "BEGIN { pc=100*${USED_MEMORY}/${TOTAL_MEMORY}; i=int(pc); print (pc-i<0.5)?i:i+1 }")
+	echo "Memory usage: " $usage"%"	
+	sendemail
+ else
+	echo "CRITICAL value should be higher than WARNING value"
+ fi
+}
+
+ function sendemail()
+ {
+# echo "this is sendmail function"
+ if [ $usage -gt $critical -o $usage -eq $critical ]
+ then
+	echo "exit 2"
+	top -a -n 1 -b | head -17 > top.log
+	exit 2
+ elif [ $usage -gt $warning -o $usage -eq $warning ]
+ then
+	echo "exit 1"
+	exit 1
+ elif [ $usage -lt $warning ]
+ then
+	echo "exit 0"
+	exit 0
+ fi
+}
+
 
 while getopts ":c:w:e:" parm ; do
 case $parm in
@@ -30,12 +64,12 @@ esac
 done
 
 #shift $((OPTIND-1))
-errvar=0
 # VALIDATE INPUTS
  if [ ! "$critical" ] || [ ! "$warning" ]
  then
 	echo "missing parameters for 'CRITICAL' and/or 'WARNING' threshold"
-	errvar=1
+ else
+	compute
  fi
 
 # if [ ! "$warning" ]
@@ -53,30 +87,4 @@ regex="^[a-z0-9!#\$%&'*+/=?^_\`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@([a-z0-
  else
 	echo "email not valid"
  fi
-
- if [ $critical -gt $warning ] && [ $errvar -eq 0 ]
- then
-	TOTAL_MEMORY=$( free | grep Mem: | awk '{ print $2 }' ) 
-	USED_MEMORY=$( free | grep Mem: | awk '{ print $3 }' )
-	#echo $TOTAL_MEMORY " " $USED_MEMORY
-	usage=$(awk "BEGIN { pc=100*${USED_MEMORY}/${TOTAL_MEMORY}; i=int(pc); print (pc-i<0.5)?i:i+1 }")
-	echo "Memory usage: " $usage"%"
- else
-	echo "CRITICAL value should be higher than WARNING"
- fi
-
- if [ $usage -gt $critical -o $usage -eq $critical ]
- then
-#	echo "exit 2"
-	exit 2
- elif [ $usage -gt $warning -o $usage -eq $warning ]
- then
-#	echo "exit 1"
-	exit 1
- elif [ $usage -lt $warning ]
- then
-#	echo "exit 0"
-	exit 0
- fi
-
-
+ 
