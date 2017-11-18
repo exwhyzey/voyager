@@ -1,0 +1,71 @@
+#!/bin/bash
+
+function usage()
+{
+	echo "Usage : $0 [-c <number>][-w <number>][-e <valid email>]"
+}
+
+
+while getopts ":c:w:e:" parm ; do
+case $parm in
+	c)
+		echo "-c critical"
+		echo "$OPTARG" 
+		critical=$OPTARG
+		;;
+	w)
+		echo "-w warning"
+		echo "$OPTARG"
+		warning=$OPTARG
+		;;
+	e)
+		echo "-e email"
+		echo "$OPTARG"
+		email="$OPTARG"
+		;;
+	*)
+		usage
+		echo "Invalid argument"
+esac
+done
+
+#shift $((OPTIND-1))
+errvar=0
+# VALIDATE INPUTS
+ if [ ! "$critical" ] || [ ! "$warning" ]
+ then
+	echo "missing parameters for 'CRITICAL' and/or 'WARNING' threshold"
+	errvar=1
+ fi
+
+# if [ ! "$warning" ]
+# then
+#	echo "missing paramater for 'WARNING' threshold"
+# fi
+ 
+regex="^[a-z0-9!#\$%&'*+/=?^_\`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]*[a-z0-9])?\$"
+
+ if [ ! "$email" ]
+ then
+	echo "missing parameter for 'EMAIL ADDRESS' "
+ elif [[ $email =~ $regex ]] ; then
+	echo "email address is valid"
+ else
+	echo "email not valid"
+ fi
+
+ if [ $critical -gt $warning ] && [ $errvar -eq 0 ]
+ then
+	TOTAL_MEMORY=$( free | grep Mem: | awk '{ print $2 }' ) 
+	USED_MEMORY=$( free | grep Mem: | awk '{ print $3 }' )
+	#echo $TOTAL_MEMORY " " $USED_MEMORY
+	usage=$(awk "BEGIN { pc=100*${USED_MEMORY}/${TOTAL_MEMORY}; i=int(pc); print (pc-i<0.5)?i:i+1 }")
+	echo "Memory usage: " $usage"%"
+else
+	echo "CRITICAL value should be higher than WARNING"
+ fi
+
+
+
+
+
