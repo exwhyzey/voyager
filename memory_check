@@ -27,6 +27,9 @@ function compute()
  then
 	echo "exit 2"
 	top -a -n 1 -b | head -17 > top.log
+	DATE=`date '+%Y%m%d %H:%M'`
+	DATE2="$DATE memory check - critical"
+	mail -s "$DATE2" exwhyzey3@yahoo.com < top.log
 	exit 2
  elif [ $usage -gt $warning -o $usage -eq $warning ]
  then
