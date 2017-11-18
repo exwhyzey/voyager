@@ -9,18 +9,18 @@ function usage()
 while getopts ":c:w:e:" parm ; do
 case $parm in
 	c)
-		echo "-c critical"
-		echo "$OPTARG" 
+	#	echo "-c critical"
+	#	echo "$OPTARG" 
 		critical=$OPTARG
 		;;
 	w)
-		echo "-w warning"
-		echo "$OPTARG"
+	#	echo "-w warning"
+	#	echo "$OPTARG"
 		warning=$OPTARG
 		;;
 	e)
-		echo "-e email"
-		echo "$OPTARG"
+	#	echo "-e email"
+	#	echo "$OPTARG"
 		email="$OPTARG"
 		;;
 	*)
@@ -49,7 +49,7 @@ regex="^[a-z0-9!#\$%&'*+/=?^_\`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@([a-z0-
  then
 	echo "missing parameter for 'EMAIL ADDRESS' "
  elif [[ $email =~ $regex ]] ; then
-	echo "email address is valid"
+	msg="email address is valid"
  else
 	echo "email not valid"
  fi
@@ -61,11 +61,22 @@ regex="^[a-z0-9!#\$%&'*+/=?^_\`{|}~-]+(\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@([a-z0-
 	#echo $TOTAL_MEMORY " " $USED_MEMORY
 	usage=$(awk "BEGIN { pc=100*${USED_MEMORY}/${TOTAL_MEMORY}; i=int(pc); print (pc-i<0.5)?i:i+1 }")
 	echo "Memory usage: " $usage"%"
-else
+ else
 	echo "CRITICAL value should be higher than WARNING"
  fi
 
-
-
+ if [ $usage -gt $critical -o $usage -eq $critical ]
+ then
+#	echo "exit 2"
+	exit 2
+ elif [ $usage -gt $warning -o $usage -eq $warning ]
+ then
+#	echo "exit 1"
+	exit 1
+ elif [ $usage -lt $warning ]
+ then
+#	echo "exit 0"
+	exit 0
+ fi
 
 
